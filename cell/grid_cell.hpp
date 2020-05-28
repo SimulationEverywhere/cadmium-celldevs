@@ -7,27 +7,43 @@
 * Cells for modeling lattice-based Cell-DEVS scenarios
 */
 
-#ifndef GRID_CELLS_HPP
-#define GRID_CELLS_HPP
+#ifndef CADMIUM_CELLDEVS_GRID_CELLS_HPP
+#define CADMIUM_CELLDEVS_GRID_CELLS_HPP
 
+#include <exception>
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
-
 #include "cell.hpp"
 #include "utils/common.hpp"
 #include "utils/grid_utils.hpp"
 
-template <typename T, typename S, typename V>
+/**
+ * @brief DEVS atomic model for defining cells in Cell-DEVS scenarios that are sorted in lattices.
+ * @tparam T the type used for representing time in a simulation.
+ * @tparam S the type used for representing a cell state.
+ * @tparam V the type used for representing a neighboring cell's vicinity. By default, it is set to integer.
+ */
+template <typename T, typename S, typename V=int>
 class grid_cell : public cell<T, cell_position, S, V, seq_hash<cell_position>> {
     public:
-        using NV = unordered_map<cell_position, V, seq_hash<cell_position>>;
+        cell_map<S, V> map;     /// Cell map
 
-        cell_map<S, V> map;
-        grid_cell(){ assert(false && "Default constructor is not valid."); }
+        /// A default constructor is required for compiling issues. However, it is valid and always throws an exception
+        grid_cell() : cell<T, cell_position, S, V, seq_hash<cell_position>>() { }
 
-        grid_cell(cell_map<S, V> const &map_in, std::string const &delayer_id):
-                cell<T, cell_position, S, V, seq_hash<cell_position>>(map_in.location, delayer_id, map_in.state, map_in.vicinity),
+        /**
+         * @brief Creates a grid-based cell
+         * @tparam Args type of any additional parameter required for creating the output delayer
+         * @param map_in auxiliary grid cell map
+         * @param delayer_id ID of the output delayer buffer used by the cell
+         * @param args output delayer buffer additional initialization parameters
+         * @see utils/grid_utils.hpp
+         * @see cell/cell.hpp
+         */
+        template <typename ...Args>
+        grid_cell(cell_map<S, V> const &map_in, std::string const &delayer_id, Args &&... args):
+                cell<T, cell_position, S, V, seq_hash<cell_position>>(map_in.location, map_in.state, map_in.vicinity, delayer_id, std::forward<Args>(args)...),
                 map{map_in} {}
 };
 
-#endif //GRID_CELLS_HPP
+#endif //CADMIUM_CELLDEVS_GRID_CELLS_HPP

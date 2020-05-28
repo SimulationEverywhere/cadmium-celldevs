@@ -3,8 +3,6 @@
 //
 
 #include <fstream>
-
-#include <cadmium/concept/coupled_model_assert.hpp>
 #include <cadmium/modeling/dynamic_coupled.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
@@ -39,18 +37,26 @@ using logger_top=logger::multilogger<state, log_messages, global_time_mes, globa
 
 int main() {
     std::unordered_map<int, int> states = std::unordered_map<int, int>();
-    std::unordered_map<int, std::unordered_map<int, int>> vicinities = std::unordered_map<int, std::unordered_map<int, int>>();
+    std::unordered_map<int, std::vector<int>> vicinities = std::unordered_map<int, std::vector<int>>();
     for (int i = 0; i < 4; i++) {
         states[i] = i;
         for (int j = i - 1; 0 <= j  && j <= i; j++) {
-            vicinities[j][i] = 1;
+            vicinities[j].push_back(i);
         }
     }
 
-    std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test = std::make_shared<cells_coupled<default_cell, TIME, int, int, int>>(
-            "test", delayer_id, states, vicinities);
+    cells_coupled<TIME, int, int> test = cells_coupled<TIME, int, int>("test");
+    for (int i = 0; i < 4; i++) {
+        auto initial_state = states.at(i);
+        auto vicinity = vicinities.at(i);
+        test.add_cell<default_cell>(i, initial_state, vicinity, delayer_id);
+    }
 
-    cadmium::dynamic::engine::runner<TIME, logger_top> r(test, {0});
+    test.couple_cells();
+
+    std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> t = std::make_shared<cells_coupled<TIME, int, int>>(test);
+
+    cadmium::dynamic::engine::runner<TIME, logger_top> r(t, {0});
     r.run_until(300);
     return 0;
 }

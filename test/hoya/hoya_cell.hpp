@@ -20,11 +20,11 @@ struct sir {
     sir(unsigned int pop, float s, float i, float r) : population(pop), susceptible(s), infected(i), recovered(r) {}
 };
 // Required for comparing states and detect any change
-inline bool operator!=(const sir &x, const sir &y) {
+inline bool operator != (const sir &x, const sir &y) {
     return x.population != y.population || x.susceptible != y.susceptible || x.infected != y.infected || x.recovered != y.recovered;
 }
 // Required if you want to use transport delay (priority queue has to sort messages somehow)
-inline bool operator<(const sir& lhs, const sir& rhs){ return true; }
+inline bool operator < (const sir& lhs, const sir& rhs){ return true; }
 // Required for printing the state of the cell
 std::ostream &operator << (std::ostream &os, const sir &x) {
     os << "<" << x.population << "," << x.susceptible << "," << x.infected << "," << x.recovered <<">";
@@ -48,13 +48,20 @@ public:
     using grid_cell<T, sir, mc>::state;
     using grid_cell<T, sir, mc>::map;
 
-    float const virulence = 0.6;
-    float const recovery = 0.4;
+    float virulence = 0.6;
+    float recovery = 0.4;
 
-    hoya_cell(){ assert(false && "Default constructor is not valid."); }
+    hoya_cell() : grid_cell<T, sir, mc>() {}
 
-    hoya_cell(cell_map<sir, mc> const &map_in, std::string const &delayer_id) :
-            grid_cell<T, sir, mc>(map_in, delayer_id) {
+    template <typename... Args>
+    hoya_cell(cell_map<sir, mc> const &map_in, std::string const &delayer_id, float vir, float rec, Args&&... args) : grid_cell<T, sir, mc>(map_in, delayer_id, std::forward<Args>(args)...) {
+        virulence = vir;
+        recovery = rec;
+    }
+
+    template <typename... Args>
+    hoya_cell(cell_map<sir, mc> const &map_in, std::string const &delayer_id, Args&&... args) :
+            grid_cell<T, sir, mc>(map_in, delayer_id, std::forward<Args>(args)...) {
         check_valid_vicinity();
         check_valid_state();
     }

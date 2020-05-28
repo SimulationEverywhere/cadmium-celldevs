@@ -11,6 +11,7 @@
 #define CADMIUM_CELLDEVS_GRID_UTILS_HPP
 
 #include "common.hpp"
+#include <exception>
 #include <cmath>
 #include <utility>
 
@@ -35,6 +36,8 @@ class cell_map {
         S state;                            // Initial state of the cell
         cell_unordered<V> vicinity;         // Indicates the vicinity type of neighbor cells
         bool wrapped{};                     // It indicates whether the scenario is wrapped or not
+
+        cell_map() { throw std::exception();}
 
         cell_map(cell_position const &shape_in, cell_position const &location_in,
                  S const &state_in, cell_unordered<V> const &vicinity_in, bool wrapped_in);
