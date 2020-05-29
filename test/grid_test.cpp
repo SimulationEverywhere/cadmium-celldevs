@@ -4,9 +4,10 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "ScenarioShape"
 
-
 #include <boost/test/unit_test.hpp>
-#include "utils/grid_utils.hpp"
+#include <cadmium/celldevs/utils/grid_utils.hpp>
+
+using namespace cadmium::celldevs;
 
 
 int moore_cells(int dimension, int range) {
@@ -22,10 +23,11 @@ BOOST_AUTO_TEST_CASE(moore) {
                 shape.push_back(2 * r + 1);
                 middle.push_back(r);
             }
-            std::vector<cell_position> neighbors = grid_scenario<>::biassed_moore_neighborhood(D, r);
+            std::vector<cell_position> neighbors = grid_scenario<int, int>::biassed_moore_neighborhood(D, r);
             BOOST_CHECK_EQUAL(neighbors.size(), moore_cells(D, r));
             for (auto const &cell: neighbors) {
-                BOOST_CHECK_LE(grid_scenario<>::chebyshev_distance(middle, cell, shape, false), r);
+                int a = grid_scenario<int, int>::chebyshev_distance(middle, cell, shape, false);
+                BOOST_CHECK_LE( a, r);
             }
         }
     }
@@ -40,9 +42,10 @@ BOOST_AUTO_TEST_CASE(von_neumann) {
                 shape.push_back(2 * r + 1);
                 middle.push_back(r);
             }
-            std::vector<cell_position> neighbors = grid_scenario<>::biassed_von_neumann_neighborhood(D, r);
+            std::vector<cell_position> neighbors = grid_scenario<int, int>::biassed_von_neumann_neighborhood(D, r);
             for (auto const &cell: neighbors) {
-                BOOST_CHECK_LE(grid_scenario<>::manhattan_distance(middle, cell, shape, false), r);
+                int a = grid_scenario<int, int>::manhattan_distance(middle, cell, shape, false);
+                BOOST_CHECK_LE(a, r);
             }
         }
     }
@@ -51,7 +54,7 @@ BOOST_AUTO_TEST_CASE(von_neumann) {
 BOOST_AUTO_TEST_CASE(grid_test_2d) {
     cell_position scenario_shape = {10, 10};
 
-    grid_scenario space = grid_scenario(scenario_shape, 0, true);
+    grid_scenario space = grid_scenario<int, int>(scenario_shape, 0, true);
     space.set_initial_state({0, 0}, 1);
     space.set_von_neumann_neighborhood(1);
     cell_unordered<int> neighbors = space.get_vicinity();
@@ -60,7 +63,7 @@ BOOST_AUTO_TEST_CASE(grid_test_2d) {
     BOOST_CHECK(space.cell_in_scenario({0, 9}));
     BOOST_CHECK(space.cell_in_scenario({0, 0}));
     cell_position ref = {0, 0};
-    cell_map<> neighborhood = space.get_cell_map(ref);
+    cell_map<int, int> neighborhood = space.get_cell_map(ref);
     BOOST_CHECK_EQUAL(neighborhood.vicinity.size(), space.get_vicinity().size());
     for (auto &cell_mapping: neighborhood.vicinity) {
         BOOST_CHECK_LT(space.manhattan_distance(ref, cell_mapping.first), 2);
@@ -73,5 +76,5 @@ BOOST_AUTO_TEST_CASE(grid_test_2d) {
         BOOST_CHECK_LT(space.manhattan_distance(ref, cell_mapping.first), 2);
     }
     ref = {3, 3};
-    cell_map<> cell_u = space.get_cell_map(ref);
+    cell_map<int, int> cell_u = space.get_cell_map(ref);
 }

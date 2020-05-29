@@ -7,10 +7,12 @@
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
 
-#include "coupled/cells_coupled.hpp"
-#include "delayer/inertial.hpp"
-#include "delayer/transport.hpp"
+#include <cadmium/celldevs/coupled/cells_coupled.hpp>
 #include "default_cell.hpp"
+
+using namespace std;
+using namespace cadmium;
+using namespace cadmium::celldevs;
 
 using TIME = float;
 std::string delayer_id = "inertial";

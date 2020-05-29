@@ -9,20 +9,20 @@ enable_testing()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cadmium/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/DESTimes/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 include_directories (${Boost_INCLUDE_DIRS})
 
-#add_executable(utils_test test/grid_test.cpp)
-#target_link_libraries(utils_test ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-#add_test(utils utils_test)
+add_executable(utils_test test/grid_test.cpp)
+target_link_libraries(utils_test ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(celldevs/utils utils_test)
 
 add_executable(basic_celldevs_test test/default/default_coupled.cpp)
 target_link_libraries(basic_celldevs_test Boost::program_options)
 
-#add_executable(grid_celldevs_test test/grid/grid_coupled.cpp)
-#target_link_libraries(grid_celldevs_test Boost::program_options)
+add_executable(grid_celldevs_test test/grid/grid_coupled.cpp)
+target_link_libraries(grid_celldevs_test Boost::program_options)
 
 add_executable(pandemic_hoya test/hoya/hoya_coupled.cpp)
 target_link_libraries(pandemic_hoya Boost::program_options)
