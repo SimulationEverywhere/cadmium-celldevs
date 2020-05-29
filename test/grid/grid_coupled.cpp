@@ -8,10 +8,13 @@
 #include <cadmium/modeling/dynamic_coupled.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
-
-#include "utils/grid_utils.hpp"
-#include "coupled/grid_coupled.hpp"
+#include <cadmium/celldevs/utils/grid_utils.hpp>
+#include <cadmium/celldevs/coupled/grid_coupled.hpp>
 #include "grid_base.hpp"
+
+using namespace std;
+using namespace cadmium;
+using namespace cadmium::celldevs;
 
 using TIME = float;
 std::string delayer_id = "inertial";

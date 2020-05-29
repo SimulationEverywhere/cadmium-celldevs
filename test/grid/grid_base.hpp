@@ -5,7 +5,9 @@
 #ifndef CADMIUM_CELLDEVS_GRID_BASE_HPP
 #define CADMIUM_CELLDEVS_GRID_BASE_HPP
 
-#include "cell/grid_cell.hpp"
+#include <cadmium/celldevs/cell/grid_cell.hpp>
+
+using namespace cadmium::celldevs;
 
 template <typename T>
 class grid_base : public grid_cell<T, int, int> {

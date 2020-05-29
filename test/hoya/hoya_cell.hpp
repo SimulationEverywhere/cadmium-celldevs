@@ -6,7 +6,9 @@
 #define CADMIUM_CELLDEVS_PANDEMIC_CELL_HPP
 
 #include <cmath>
-#include "cell/grid_cell.hpp"
+#include <cadmium/celldevs/cell/grid_cell.hpp>
+
+using namespace cadmium::celldevs;
 
 /************************************/
 /******COMPLEX STATE STRUCTURE*******/
