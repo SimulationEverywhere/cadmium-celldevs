@@ -7,8 +7,8 @@ add_compile_options(-g)
 
 enable_testing()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../cadmium/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../DESTimes/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cadmium/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/DESTimes/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
