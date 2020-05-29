@@ -5,11 +5,16 @@ set (CMAKE_CXX_COMPILER "g++")
 project(cadmium_celldevs)
 add_compile_options(-g)
 
+
 enable_testing()
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cadmium/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/DESTimes/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 include_directories (${Boost_INCLUDE_DIRS})
