@@ -9,7 +9,9 @@
 
 #include <cmath>
 #include <assert.h>
-#include "cell/grid_cell.hpp"
+#include <cadmium/celldevs/cell/grid_cell.hpp>
+
+using namespace cadmium::celldevs;
 
 
 /************************************/

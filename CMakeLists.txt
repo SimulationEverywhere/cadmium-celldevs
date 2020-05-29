@@ -26,3 +26,6 @@ target_link_libraries(grid_celldevs_test Boost::program_options)
 
 add_executable(pandemic_hoya test/hoya/hoya_coupled.cpp)
 target_link_libraries(pandemic_hoya Boost::program_options)
+
+add_executable(co2_lab test/co2_model_lab/CO2_coupled.cpp)
+target_link_libraries(co2_lab Boost::program_options)

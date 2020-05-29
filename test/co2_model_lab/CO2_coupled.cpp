@@ -11,9 +11,13 @@
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
 
-#include "utils/grid_utils.hpp"
-#include "coupled/grid_coupled.hpp"
+#include <cadmium/celldevs/utils/grid_utils.hpp>
+#include <cadmium/celldevs/coupled/grid_coupled.hpp>
 #include "CO2_cell.hpp"
+
+using namespace std;
+using namespace cadmium;
+using namespace cadmium::celldevs;
 
 using TIME = float;
 
