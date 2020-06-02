@@ -123,14 +123,19 @@ public:
         assert(0 <= phase && phase <= 1);
         switch (phase) {
             case 0:
-                return 0.5;
-            case 1:
                 return 0.2;
+            case 1:
+                return 0.5;
         }
     }
 
     unsigned int next_phase(unsigned int phase) const {
-        int aux = (int)(clock + state.current_state.offset) % (phases_durations[0] + phases_durations[1]);
+        int days_sum = 0;
+        for(int phase_duration: phases_durations) {
+            days_sum += phase_duration;
+        }
+
+        int aux = (int)(clock + state.current_state.offset) % (days_sum);
         int i = 0;
 
         while (aux >= phases_durations[i]) {
