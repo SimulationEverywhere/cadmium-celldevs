@@ -7,9 +7,9 @@ add_compile_options(-g)
 
 enable_testing()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../cadmium/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cadmium/include)
 #include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cadmium/include)
-#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/DESTimes/include)
 
 
@@ -28,3 +28,6 @@ target_link_libraries(grid_celldevs_test Boost::program_options)
 
 add_executable(pandemic_hoya test/hoya/hoya_coupled.cpp)
 target_link_libraries(pandemic_hoya Boost::program_options)
+
+add_executable(pandemic_hoya_iranian test/hoya_iranian/hoya_coupled.cpp)
+target_link_libraries(pandemic_hoya_iranian Boost::program_options)
