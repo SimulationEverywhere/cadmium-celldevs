@@ -45,8 +45,8 @@ using logger_top=logger::multilogger<state, log_messages, global_time_mes, globa
 
 int main() {
 
-    grid_scenario<sir, mc> scenario = grid_scenario<sir,mc>({50, 50}, sir(100, 1, 0, 0), true);
-    scenario.set_initial_state({24, 24}, sir(100, 0.7, 0.3, 0));
+    grid_scenario<sir, mc> scenario = grid_scenario<sir,mc>({50, 50}, sir(100, 3, 1, 0, 0), true);
+    scenario.set_initial_state({24, 24}, sir(100, 3, 0.7, 0.3, 0));
 
     scenario.set_von_neumann_neighborhood(1, mc(1, 0.5));
     scenario.add_neighborhood({{0, 0}}, mc(1, 1));
