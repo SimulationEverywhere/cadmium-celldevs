@@ -49,7 +49,10 @@ int main() {
 
     grid_scenario<co2, int> scenario = grid_scenario<co2,int>({38, 57}, co2(), false);
     
+    vector<pair(co2)> initial_values;
+    for (int)
     //scenario.set_initial_state({24, 24}, sir(100, 0.7, 0.3, 0));
+    //co2(int i_counter, float i_concentration, CELL_TYPE i_type)
 
     scenario.set_von_neumann_neighborhood(1, 1);
     
