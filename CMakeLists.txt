@@ -31,3 +31,6 @@ target_link_libraries(pandemic_hoya Boost::program_options)
 
 add_executable(pandemic_hoya_iranian test/hoya_iranian/hoya_coupled.cpp)
 target_link_libraries(pandemic_hoya_iranian Boost::program_options)
+
+add_executable(pandemic_hoya_spain test/hoya_spain/hoya_coupled.cpp)
+target_link_libraries(pandemic_hoya_spain Boost::program_options)

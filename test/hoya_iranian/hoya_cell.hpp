@@ -57,6 +57,7 @@ public:
 
     float virulence = 0.6;
     float recovery = 0.4;
+    float disobedient = 0.0;
     int phases_durations[2] = {10, 4};
 
     hoya_cell() : grid_cell<T, sir, mc>() {}
@@ -113,7 +114,8 @@ public:
             sir n = state.neighbors_state.at(neighbor);
             mc v = state.neighbors_vicinity.at(neighbor);
             float penalty = get_phase_penalty(n.phase);
-            aux += penalty * n.infected * (float) n.population * v.movement * v.connection;
+            aux += (1 - disobedient) * penalty * n.infected * (float) n.population * v.movement * v.connection;
+            aux += disobedient * n.infected * (float) n.population * v.movement * v.connection;
         }
         sir s = state.current_state;
         return std::min(s.susceptible, s.susceptible * virulence * aux / (float) s.population);
