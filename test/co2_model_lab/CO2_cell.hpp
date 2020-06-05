@@ -59,7 +59,7 @@ public:
         co2 new_state = state.current_state;
         switch(state.current_state.type){
             case IMPERMEABLE_STRUCTURE: 
-                new_state.concentration = -10;
+                new_state.concentration = 0;
                 break;
             case DOOR:    
                 new_state.concentration = 500;
@@ -72,65 +72,54 @@ public:
                 break;
             case WORKSTATION:{
                 int concentration = 0;
-                int counter = 0;
-                bool co2_neg = false;
-                
+                int num_neighbors = 0;                
                 for(auto neighbors: state.neighbors_state) {
-                    if(relative(neighbors) != (0,0) && state.neighbors_state < 0){
-                        co2_neg = true;
-                        assert(flase & "co2 concentration cannot be negative");
+                    if( neighbors.second.concentration < 0){
+                        assert(false && "co2 concentration cannot be negative");
                     }
                     concentration += neighbors.second.concentration;
-                    counter +=1;
+                    num_neighbors +=1;
                 }
-                new_state.concentration = concentration/counter;
+                new_state.concentration = concentration/num_neighbors;
                 
                     
                 if (state.current_state.counter <= 30) {
                     new_state.counter += 1;                   
                 }
+
                 if (state.current_state.counter == 30){
                     new_state.type = CO2_SOURCE; 
                 }
                 break;
             }
-{ $counter:= $counter + 1; } 1000 { $type = -700 AND $counter < 30 AND (-1,0)~c > 0 AND (0,-1)~c > 0 AND (0,1)~c > 0 AND (1,0)~c > 0}
-
-{  $counter:= $counter + 1; $type:= -200; } 1000 { $type = -700 AND $counter = 30 AND (-1,0)~c > 0 AND (0,-1)~c > 0 AND (0,1)~c > 0 AND (1,0)~c > 0}
-
-{  } 1000 { $type = -700 AND $counter > 250 AND (-1,0)~c > 0 AND (0,-1)~c > 0 AND (0,1)~c > 0 AND (1,0)~c > 0}
-
             case AIR:{
-                if (new_state.concentration < 0){ 
-                    assert(false && "concentration on an AIR cell cannot be negative");
-                }
-                float concentration = 0;
-                int counter = 0;
+                int concentration = 0;
+                int num_neighbors = 0;                
                 for(auto neighbors: state.neighbors_state) {
-                    if(neighbors.second.concentration>0){
-                        concentration += neighbors.second.concentration;
-                        counter +=1; 
-                    }                    
+                    if( neighbors.second.concentration < 0){
+                        assert(false && "co2 concentration cannot be negative");
+                    }
+                    concentration += neighbors.second.concentration;
+                    num_neighbors +=1;
                 }
-                if (counter != 0){
-                    new_state.concentration = concentration/counter;
-                }
+                new_state.concentration = concentration/num_neighbors;
                 break;             
             }
             case CO2_SOURCE:{
-                float concentration = 0;
-                int counter = 0;
+                int concentration = 0;
+                int num_neighbors = 0;
                 for(auto neighbors: state.neighbors_state) {
-                    if(neighbors.second.concentration>0){
-                        concentration += neighbors.second.concentration;
-                        counter +=1; 
-                    }                    
+                  if( neighbors.second.concentration < 0){
+                        assert(false && "co2 concentration cannot be negative");
+                    }
+                    concentration += neighbors.second.concentration;
+                    num_neighbors +=1;                
                 }
                 // CO2 sources have their concentration continually increased by 12.16 ppm every 5 seconds.
-                new_state.concentration = (concentration/counter) + (121.6*2);
+                new_state.concentration = (concentration/num_neighbors) + (121.6*2);
                 new_state.counter += 1;
                 if (state.current_state.counter >= 250) {
-                    new_state.type = WORKSTATION; //It is strange: and air cell is now a work-station?
+                    new_state.type = WORKSTATION; //The student left. The place is free.
                 }
                 break;
             }
