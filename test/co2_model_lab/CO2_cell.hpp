@@ -20,10 +20,10 @@ using namespace cadmium::celldevs;
 enum CELL_TYPE {AIR, CO2_SOURCE, IMPERMEABLE_STRUCTURE, DOOR, WINDOW, VENTILATION, WORKSTATION};
 struct co2 {
     int counter;
-    float concentration;
+    int concentration;
     CELL_TYPE type;
     co2() : counter(-1), concentration(500), type(AIR) {}  // a default constructor is required
-    co2(int i_counter, float i_concentration, CELL_TYPE i_type) : counter(i_counter), concentration(i_concentration), type(i_type) {}
+    co2(int i_counter, int i_concentration, CELL_TYPE i_type) : counter(i_counter), concentration(i_concentration), type(i_type) {}
 };
 // Required for comparing states and detect any change
 inline bool operator != (const co2 &x, const co2 &y) {
@@ -71,9 +71,15 @@ public:
                 new_state.concentration = 300;
                 break;
             case WORKSTATION:{
-                float concentration = 0;
+                int concentration = 0;
                 int counter = 0;
+                bool co2_neg = false;
+                
                 for(auto neighbors: state.neighbors_state) {
+                    if(relative(neighbors) != (0,0) && state.neighbors_state < 0){
+                        co2_neg = true;
+                        assert(flase & "co2 concentration cannot be negative");
+                    }
                     concentration += neighbors.second.concentration;
                     counter +=1;
                 }
@@ -88,6 +94,12 @@ public:
                 }
                 break;
             }
+{ $counter:= $counter + 1; } 1000 { $type = -700 AND $counter < 30 AND (-1,0)~c > 0 AND (0,-1)~c > 0 AND (0,1)~c > 0 AND (1,0)~c > 0}
+
+{  $counter:= $counter + 1; $type:= -200; } 1000 { $type = -700 AND $counter = 30 AND (-1,0)~c > 0 AND (0,-1)~c > 0 AND (0,1)~c > 0 AND (1,0)~c > 0}
+
+{  } 1000 { $type = -700 AND $counter > 250 AND (-1,0)~c > 0 AND (0,-1)~c > 0 AND (0,1)~c > 0 AND (1,0)~c > 0}
+
             case AIR:{
                 if (new_state.concentration < 0){ 
                     assert(false && "concentration on an AIR cell cannot be negative");

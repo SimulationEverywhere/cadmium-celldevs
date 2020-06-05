@@ -5,6 +5,8 @@
 //
 
 #include <fstream>
+#include <iostream>
+#include <string>
 
 #include <cadmium/concept/coupled_model_assert.hpp>
 #include <cadmium/modeling/dynamic_coupled.hpp>
@@ -14,6 +16,8 @@
 #include <cadmium/celldevs/utils/grid_utils.hpp>
 #include <cadmium/celldevs/coupled/grid_coupled.hpp>
 #include "CO2_cell.hpp"
+
+ #include <unistd.h>
 
 using namespace std;
 using namespace cadmium;
@@ -49,11 +53,69 @@ int main() {
 
     grid_scenario<co2, int> scenario = grid_scenario<co2,int>({38, 57}, co2(), false);
     
-    vector<pair(co2)> initial_values;
-    for (int)
-    //scenario.set_initial_state({24, 24}, sir(100, 0.7, 0.3, 0));
-    //co2(int i_counter, float i_concentration, CELL_TYPE i_type)
+    ifstream myfile;
+    string line;    
+    myfile.open("test/co2_model_lab/computer_lab.txt");
+    if (!myfile.is_open()){
+         assert(false && "error opening input file");
+    }
+    while ( getline(myfile,line) ){
+        string cell;
+        int cell_x;
+        int cell_y;        
+        co2 input;
+        int type;
 
+        std::string delimiter = "=";
+        size_t pos = line.find(delimiter);
+        cell = line.substr(0, pos);
+        line.erase(0, pos + delimiter.length());
+        delimiter = ",";
+        pos = cell.find(delimiter);
+        cell_x = std::stoi(cell.substr(0, pos));
+        
+        cell.erase(0, pos + delimiter.length());
+        cell_y = std::stoi(cell);
+     
+        pos = line.find(delimiter);
+        input.concentration = std::stoi(line.substr(0, pos));
+   
+        line.erase(0, pos + delimiter.length());
+        pos = line.find(delimiter);
+        type = std::stoi(line.substr(0, pos));
+        line.erase(0, pos + delimiter.length());
+        input.counter = std::stoi(line);
+   
+        switch(type){
+            case -300: 
+                input.type = IMPERMEABLE_STRUCTURE;
+                break;
+            case -400:    
+               input.type = DOOR;
+                break;
+            case -500:
+                input.type = WINDOW;
+                break;
+            case -600:
+               input.type = VENTILATION;
+                break;
+            case -700:
+               input.type = WORKSTATION;
+                break;
+            case -100:
+                input.type = AIR;
+                break;             
+            case -200:
+                input.type = CO2_SOURCE;
+                break;
+            default:
+                assert(false && "invalid input");
+            }
+                
+ 
+        scenario.set_initial_state({cell_x, cell_y}, co2(input.counter, input.concentration, input.type));
+    }
+    myfile.close();
     scenario.set_von_neumann_neighborhood(1, 1);
     
     grid_coupled<TIME, co2> CO2_model = grid_coupled<TIME, co2>("CO2_model");
