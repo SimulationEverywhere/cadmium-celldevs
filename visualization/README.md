@@ -10,10 +10,10 @@ The parser is invoked as follows:
 - Windows: $./parser.exe input_messages_log.txt model_name number_of_ports output_folder
 - Linux: $./parser input_messages_log.txt model_name number_of_ports output_folder
 
- - "input_messages_log.txt" is the relative path to the Cadmium Cell-DEVS output log;
- - "model_name" is a parameter to specify the name to be shown in the visualizer and has no other effect.
- - "number_of_ports" is the number of values that are concatenated in each cell state.
- - "output_folder" is the relative path of the folder that the parser creates to output the resulting files.
+  - "input_messages_log.txt" is the relative path to the Cadmium Cell-DEVS output log;
+  - "model_name" is a parameter to specify the name to be shown in the visualizer and has no other effect.
+  - "number_of_ports" is the number of values that are concatenated in each cell state.
+  - "output_folder" is the relative path of the folder that the parser creates to output the resulting files.
 
 The parser generates 3 output files and stores them in the output_folder: options.json, simulation.json and transitions.csv.
 - "options.json" specifies different settings for the visualizer as the playback speed and the number of columns to draw, in order to see the output for the different ports.
