@@ -6,8 +6,7 @@ a suitable input for the ARSLab SimpleViewer API.
 Compile the parser simply with:
 $ g++ -o parser Parser_Cadmium_CellDEVS.cpp
 
-The parser is invoked as follows: 
-
+The parser is invoked as follows:
 Windows: $./parser.exe input_messages_log.txt model_name number_of_ports output_folder
 Linux: $./parser input_messages_log.txt model_name number_of_ports output_folder
 
