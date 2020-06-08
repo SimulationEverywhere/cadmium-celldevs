@@ -17,7 +17,7 @@ using namespace cadmium::celldevs;
 /************************************/
 /******COMPLEX STATE STRUCTURE*******/
 /************************************/
-enum CELL_TYPE {AIR, CO2_SOURCE, IMPERMEABLE_STRUCTURE, DOOR, WINDOW, VENTILATION, WORKSTATION};
+enum CELL_TYPE {AIR=-100, CO2_SOURCE=-200, IMPERMEABLE_STRUCTURE=-300, DOOR=-400, WINDOW=-500, VENTILATION=-600, WORKSTATION=-700};
 struct co2 {
     int counter;
     int concentration;
@@ -46,12 +46,14 @@ public:
     using grid_cell<T, co2, int>::map;
 
  
-    co2_lab_cell() : grid_cell<T, co2, int>() {}
+    co2_lab_cell() : grid_cell<T, co2, int>() {
+    }
 
    
     template <typename... Args>
     co2_lab_cell(cell_map<co2, int> const &map_in, std::string const &delayer_id, Args&&... args) :
             grid_cell<T, co2, int>(map_in, delayer_id, std::forward<Args>(args)...) {
+
     }
 
     // user must define this function. It returns the next cell state and its corresponding timeout
@@ -77,8 +79,10 @@ public:
                     if( neighbors.second.concentration < 0){
                         assert(false && "co2 concentration cannot be negative");
                     }
-                    concentration += neighbors.second.concentration;
-                    num_neighbors +=1;
+                    if(neighbors.second.type != IMPERMEABLE_STRUCTURE){
+                        concentration += neighbors.second.concentration;
+                        num_neighbors +=1;
+                    }
                 }
                 new_state.concentration = concentration/num_neighbors;
                 
@@ -99,8 +103,10 @@ public:
                     if( neighbors.second.concentration < 0){
                         assert(false && "co2 concentration cannot be negative");
                     }
-                    concentration += neighbors.second.concentration;
-                    num_neighbors +=1;
+                    if(neighbors.second.type != IMPERMEABLE_STRUCTURE){
+                        concentration += neighbors.second.concentration;
+                        num_neighbors +=1;
+                    }
                 }
                 new_state.concentration = concentration/num_neighbors;
                 break;             
@@ -112,16 +118,21 @@ public:
                   if( neighbors.second.concentration < 0){
                         assert(false && "co2 concentration cannot be negative");
                     }
-                    concentration += neighbors.second.concentration;
-                    num_neighbors +=1;                
+                      if(neighbors.second.type != IMPERMEABLE_STRUCTURE){
+                        concentration += neighbors.second.concentration;
+                        num_neighbors +=1;
+                    }               
                 }
                 // CO2 sources have their concentration continually increased by 12.16 ppm every 5 seconds.
                 new_state.concentration = (concentration/num_neighbors) + (121.6*2);
                 new_state.counter += 1;
-                if (state.current_state.counter >= 250) {
+                if (state.current_state.counter == 250) {
                     new_state.type = WORKSTATION; //The student left. The place is free.
                 }
                 break;
+            }
+            default:{
+                assert(false && "should never happen");
             }
         }
       
@@ -133,8 +144,8 @@ public:
     // It returns the delay to communicate cell's new state.
     T output_delay(co2 const &cell_state) const override {
         switch(cell_state.type){
-            case CO2_SOURCE: return 5000;
-            default: return 1000;
+            case CO2_SOURCE: return 5;
+            default: return 1;
         }
     }
 

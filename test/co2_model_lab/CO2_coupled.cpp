@@ -125,7 +125,7 @@ int main() {
     std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> t = std::make_shared<grid_coupled<TIME, co2, int>>(CO2_model);
 
     cadmium::dynamic::engine::runner<TIME, logger_top> r(t, {0});
-    r.run_until(30000);
+    r.run_until(400);
     cout << "Simulation finished" << endl;
     return 0;
 }
