@@ -7,8 +7,8 @@ Compile the parser simply with:
 $ g++ -o parser Parser_Cadmium_CellDEVS.cpp
 
 The parser is invoked as follows:
--Windows: $./parser.exe input_messages_log.txt model_name number_of_ports output_folder
--Linux: $./parser input_messages_log.txt model_name number_of_ports output_folder
+- Windows: $./parser.exe input_messages_log.txt model_name number_of_ports output_folder
+- Linux: $./parser input_messages_log.txt model_name number_of_ports output_folder
 
  - "input_messages_log.txt" is the relative path to the Cadmium Cell-DEVS output log;
  - "model_name" is a parameter to specify the name to be shown in the visualizer and has no other effect.
