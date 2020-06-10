@@ -16,6 +16,7 @@
 #include <limits>
 #include <algorithm>
 #include <utility>
+#include <vector>
 #include <unordered_map>
 #include <cassert>
 #include <cadmium/modeling/ports.hpp>
@@ -88,6 +89,7 @@ namespace cadmium::celldevs {
 
 
         C cell_id;                          /// Cell ID
+        std::vector<C> neighbors;           /// Neighboring cells' IDs
         T clock;                            /// simulation clock
         T next_internal;                    /// Time remaining until next internal state transition
         delayer<T, S> *buffer;              /// output message buffer
@@ -107,14 +109,14 @@ namespace cadmium::celldevs {
          * @tparam Args type of any additional parameter required for creating the output delayer.
          * @param cell_id ID of the cell to be created.
          * @param initial_state initial state of the cell.
-         * @param neighbors vector containing the ID of the neighboring cells.
+         * @param neighbors_in vector containing the ID of the neighboring cells.
          * @param delayer_id ID of the output delayer used by the cell.
          * @param args output delayer buffer additional initialization parameters.
          */
         template <typename... Args>
-        cell(C const &cell_id, S initial_state, std::vector<C> const &neighbors, std::string const &delayer_id, Args&&... args) {
+        cell(C const &cell_id, S initial_state, std::vector<C> const &neighbors_in, std::string const &delayer_id, Args&&... args) {
             NV vicinity = NV();
-            for (auto const &neighbor: neighbors) {
+            for (auto const &neighbor: neighbors_in) {
                 vicinity.insert({neighbor, V()});
             }
             new (this) cell(cell_id, initial_state, vicinity, delayer_id, std::forward<Args>(args)...);
@@ -137,8 +139,9 @@ namespace cadmium::celldevs {
             next_internal = T();
             state.current_state = initial_state;
             for (auto const &entry: vicinity) {
+                neighbors.push_back(entry.first);
                 state.neighbors_vicinity[entry.first] = entry.second;
-                state.neighbors_state[entry.first];  // Neighbors' initial state is set as the default
+                state.neighbors_state[entry.first] = S();
             }
             buffer = delayer_factory<T, S>::create_delayer(delayer_id, std::forward<Args>(args)...);
             buffer->add_to_buffer(initial_state, T());  // At t = 0, every cell communicates its state to its neighbors

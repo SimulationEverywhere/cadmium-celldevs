@@ -15,21 +15,23 @@ using namespace cadmium::celldevs;
 /************************************/
 struct sir {
     unsigned int population;
+    unsigned int phase;
     float susceptible;
     float infected;
     float recovered;
-    sir() : population(0), susceptible(1), infected(0), recovered(0) {}  // a default constructor is required
-    sir(unsigned int pop, float s, float i, float r) : population(pop), susceptible(s), infected(i), recovered(r) {}
+    sir() : population(0), phase(0), susceptible(1), infected(0), recovered(0) {}  // a default constructor is required
+    sir(unsigned int pop, unsigned int phase, float s, float i, float r) : population(pop), phase(phase), susceptible(s), infected(i), recovered(r) {}
 };
 // Required for comparing states and detect any change
 inline bool operator != (const sir &x, const sir &y) {
-    return x.population != y.population || x.susceptible != y.susceptible || x.infected != y.infected || x.recovered != y.recovered;
+    return x.population != y.population || x.phase != y.phase ||
+    x.susceptible != y.susceptible || x.infected != y.infected || x.recovered != y.recovered;
 }
 // Required if you want to use transport delay (priority queue has to sort messages somehow)
 inline bool operator < (const sir& lhs, const sir& rhs){ return true; }
 // Required for printing the state of the cell
 std::ostream &operator << (std::ostream &os, const sir &x) {
-    os << "<" << x.population << "," << x.susceptible << "," << x.infected << "," << x.recovered <<">";
+    os << "<" << x.population << "," << x.phase << "," << x.susceptible << "," << x.infected << "," << x.recovered <<">";
     return os;
 }
 
@@ -47,8 +49,10 @@ struct mc {
 template <typename T>
 class hoya_cell : public grid_cell<T, sir, mc> {
 public:
+    using grid_cell<T, sir, mc>::clock;
     using grid_cell<T, sir, mc>::state;
     using grid_cell<T, sir, mc>::map;
+    using grid_cell<T, sir, mc>::neighbors;
 
     float virulence = 0.6;
     float recovery = 0.4;
@@ -76,6 +80,7 @@ public:
         res.recovered = std::round((res.recovered + new_r) * 100) / 100;
         res.infected = std::round((res.infected + new_i - new_r) * 100) / 100;
         res.susceptible = 1 - res.infected - res.recovered;
+        res.phase = next_phase(res.phase);
         return res;
     }
     // It returns the delay to communicate cell's new state.
@@ -102,13 +107,31 @@ public:
 
     float new_infections() const {
         float aux = 0;
-        for(auto neighbors: state.neighbors_state) {
-            sir n = neighbors.second;
-            mc v = state.neighbors_vicinity.at(neighbors.first);
-            aux += n.infected * (float) n.population * v.movement * v.connection;
+        for(auto neighbor: neighbors) {
+            sir n = state.neighbors_state.at(neighbor);
+            mc v = state.neighbors_vicinity.at(neighbor);
+            float penalty = get_phase_penalty(n.phase);
+            aux += penalty * n.infected * (float) n.population * v.movement * v.connection;
         }
         sir s = state.current_state;
         return std::min(s.susceptible, s.susceptible * virulence * aux / (float) s.population);
+    }
+
+    float get_phase_penalty(unsigned int phase) const {
+        switch (phase) {
+            case 0:
+                return 0.2;
+            case 1:
+                return 0.5;
+            case 2:
+                return 0.7;
+            default:
+                return 1;
+        }
+    }
+
+    unsigned int next_phase(unsigned int phase) const {
+        return ((int)(clock + 1) % 7 == 0)? (phase + 1) % 4 : phase;
     }
 };
 
