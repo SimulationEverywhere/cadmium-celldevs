@@ -58,6 +58,6 @@ int main() {
     std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> t = std::make_shared<grid_coupled<TIME, sir, mc>>(test);
 
     cadmium::dynamic::engine::runner<TIME, logger_top> r(t, {0});
-    r.run_until(300000);
+    r.run_until(300);
     return 0;
 }

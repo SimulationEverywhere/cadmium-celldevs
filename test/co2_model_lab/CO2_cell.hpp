@@ -40,23 +40,29 @@ std::ostream &operator << (std::ostream &os, const co2 &x) {
 
 // Each cell is 25cm x 25cm x 25cm = 15.626 Liters of air each
 template <typename T>
-class co2_lab_cell : public grid_cell<T, co2, int> {
+class co2_lab_cell : public grid_cell<T, co2> {
 public:
     using grid_cell<T, co2, int>::state;
     using grid_cell<T, co2, int>::map;
 
+     // CO2 sources have their concentration continually increased by default by 12.16 ppm every 5 seconds.
+    float  concentration_increase = 121.6*2;
  
     co2_lab_cell() : grid_cell<T, co2, int>() {
     }
 
-   
     template <typename... Args>
     co2_lab_cell(cell_map<co2, int> const &map_in, std::string const &delayer_id, Args&&... args) :
-            grid_cell<T, co2, int>(map_in, delayer_id, std::forward<Args>(args)...) {
+            grid_cell<T, co2>(map_in, delayer_id, std::forward<Args>(args)...) {
+
+    }
+     template <typename... Args>
+    co2_lab_cell(cell_map<co2, int> const &map_in, std::string const &delayer_id, float con_inc, Args&&... args) :
+            grid_cell<T, co2>(map_in, delayer_id, std::forward<Args>(args)...) {
+                concentration_increase = con_inc;
 
     }
 
-    // user must define this function. It returns the next cell state and its corresponding timeout
     co2 local_computation() const override {
         co2 new_state = state.current_state;
         switch(state.current_state.type){
@@ -123,8 +129,8 @@ public:
                         num_neighbors +=1;
                     }               
                 }
-                // CO2 sources have their concentration continually increased by 12.16 ppm every 5 seconds.
-                new_state.concentration = (concentration/num_neighbors) + (121.6*2);
+                
+                new_state.concentration = (concentration/num_neighbors) + (concentration_increase);
                 new_state.counter += 1;
                 if (state.current_state.counter == 250) {
                     new_state.type = WORKSTATION; //The student left. The place is free.

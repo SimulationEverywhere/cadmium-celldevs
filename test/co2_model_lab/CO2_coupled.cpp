@@ -51,7 +51,7 @@ using logger_top=logger::multilogger<state, log_messages, global_time_mes, globa
 
 int main() {
 
-    grid_scenario<co2, int> scenario = grid_scenario<co2,int>({38, 57}, co2(), false);
+    grid_scenario<co2,int> scenario = grid_scenario<co2, int>({38, 57}, co2(), false);
     
     ifstream myfile;
     string line;    
