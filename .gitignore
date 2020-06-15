@@ -30,6 +30,7 @@
 *.exe
 *.out
 *.app
+bin/*
 
 # MacOS stuff
 .DS_Store
@@ -37,3 +38,10 @@
 # JetBrains stuff
 .idea/
 cmake-build-debug/
+
+#CMakeFiles
+CMakeFiles/*
+cmake_install.cmake
+CMakeCache.txt
+cTestTestfile.cmake
+

@@ -46,7 +46,7 @@ using logger_top=logger::multilogger<state, log_messages, global_time_mes, globa
 
 int WIDTH = 50;
 int HEIGHT = 50;
-int INIT_MODE = 1;
+int INIT_MODE = 0;
 int RAND_SEED = 0;
 
 int main() {
