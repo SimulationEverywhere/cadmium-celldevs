@@ -13,6 +13,18 @@
 
 using namespace cadmium::celldevs;
 
+// Model Variables
+int totalStudents = 5; //Total CO2_Source in the model
+int studentGenerateCount = 5; //Student generate speed (n count/student)
+
+std::list<std::pair<char,std::pair<int,int>>> nextActionList; //List include the next action for CO2_Source movement <action(+:Appear CO2_Source;-:Remove CO2_Source),<xPosition,yPosition>>
+std::list<std::pair<std::pair<int,char>,std::pair<int,int>>> studentsList; //List include all CO2_Source that generated <<StudentID,state(+:Join;-:Leaving)>,<xPosition,yPosition>>
+
+std::list<std::pair<int,std::pair<int,int>>> workstationsList; //List include the information of exist workstations <workStationID,<xPosition,yPosition>>
+int workstationNumber = 0; //Total number of exist workstations
+
+int counter = 0; //counter for studentGenerateCount
+int studentGenerated = 0; //Record the number of students the already generated
 
 /************************************/
 /******COMPLEX STATE STRUCTURE*******/
@@ -65,6 +77,11 @@ public:
 
     co2 local_computation() const override {
         co2 new_state = state.current_state;
+
+        std::pair<int,int> currentLocation;
+        currentLocation.first = this->map.location[0];
+        currentLocation.second = this->map.location[1];
+
         switch(state.current_state.type){
             case IMPERMEABLE_STRUCTURE: 
                 new_state.concentration = 0;
@@ -91,15 +108,7 @@ public:
                     }
                 }
                 new_state.concentration = concentration/num_neighbors;
-                
-                    
-                if (state.current_state.counter <= 30) {
-                    new_state.counter += 1;                   
-                }
 
-                if (state.current_state.counter == 30){
-                    new_state.type = CO2_SOURCE; 
-                }
                 break;
             }
             case AIR:{
@@ -115,6 +124,40 @@ public:
                     }
                 }
                 new_state.concentration = concentration/num_neighbors;
+
+                if (counter == 0 && studentGenerated < totalStudents && studentGenerated < workstationNumber){
+                    if(currentLocation.first == 32 && currentLocation.second == 8){ // CO2_Source Generation Location (32,8)
+
+                        //Given student ID and record the location
+                        std::pair<std::pair<int,char>,std::pair<int,int>> studentID;
+                        studentID.first.first = studentGenerated;
+                        studentID.first.second = '+';
+                        studentID.second = currentLocation;
+                        studentsList.push_back(studentID);
+
+                        //Arrange the next action
+                        std::pair<char,std::pair<int,int>> newAction;
+                        newAction.first = '-';
+                        newAction.second = currentLocation;
+                        nextActionList.push_back(newAction);
+
+                        studentGenerated++;
+                        new_state.type = CO2_SOURCE;
+                    }
+                }
+
+                //Appear CO2_Source at currentLocation
+                if(nextActionList.front().first == '+' && currentLocation == nextActionList.front().second) {
+
+                    //Arrange the next action
+                    std::pair<char,std::pair<int,int>> newAction;
+                    newAction.first = '-';
+                    newAction.second = currentLocation;
+                    nextActionList.push_back(newAction);
+
+                    nextActionList.pop_front();
+                    new_state.type = CO2_SOURCE;
+                }
                 break;             
             }
             case CO2_SOURCE:{
@@ -132,8 +175,38 @@ public:
                 
                 new_state.concentration = (concentration/num_neighbors) + (concentration_increase);
                 new_state.counter += 1;
-                if (state.current_state.counter == 250) {
-                    new_state.type = WORKSTATION; //The student left. The place is free.
+
+                //Remove CO2_Source at currentLocation
+                if(nextActionList.front().first == '-' && currentLocation == nextActionList.front().second) {
+                    std::list<std::pair<std::pair<int, char>, std::pair<int, int>>>::iterator i;
+                    for (i = studentsList.begin(); i != studentsList.end(); i++) {
+                        if (i->second == currentLocation) { //Find the corresponding student
+                            if(state.current_state.counter >= 250){
+                                i->first.second = '-';
+                            }
+                            std::pair<int, int> nextLocation = setNextRoute(currentLocation, i->first);
+                            std::pair<char,std::pair<int,int>> newAction;
+                            i->second = nextLocation;
+
+                            if(nextLocation == currentLocation){
+                                //Arrangement next action
+                                newAction.first = '-';
+                                newAction.second = nextLocation;
+                                nextActionList.push_back(newAction);
+                            }else if(nextLocation.first == -1 && nextLocation.second == -1){
+                                new_state.type = AIR;
+                            }else {
+                                //Arrangement next action
+                                newAction.first = '+';
+                                newAction.second = nextLocation;
+                                nextActionList.push_back(newAction);
+
+                                new_state.type = AIR;
+                            }
+                            counter = (counter + 1) % studentGenerateCount;
+                            nextActionList.pop_front();
+                        }
+                    }
                 }
                 break;
             }
@@ -146,7 +219,162 @@ public:
 
     }
 
-    
+    /*
+     * Calculate the position after the movement
+     *
+     * return: nextLocation
+     */
+    [[nodiscard]] std::pair<int,int> setNextRoute(std::pair<int,int> location, std::pair<int, char> studentIDNumber) const {
+        std::pair<int, int> nextLocation;
+        std::pair<int, int> destination;
+        std::pair<int, int> locationChange;
+        int destinationWSNum = studentIDNumber.first % workstationNumber;
+
+        if(studentIDNumber.second == '-'){
+            destination.first = 33;
+            destination.second = 8;
+
+            if(doorNearby(destination)){
+                nextLocation.first = -1;
+                nextLocation.second = -1;
+                return nextLocation;
+            }
+        }else {
+            //Get destination workstation location
+            for (auto const i:workstationsList) {
+                if (i.first == destinationWSNum) {
+                    destination = i.second;
+                }
+            }
+
+            if(WSNearby(destination)){
+                nextLocation = location;
+                return nextLocation;
+            }
+        }
+
+        int x_diff = abs(location.first - destination.first);
+        int y_diff = abs(location.second - destination.second);
+
+        if(x_diff >= y_diff) { // x as priority direction
+            if (destination.first < location.first) { //move left
+                locationChange = navigation(location,'x','-');
+            }else{//move right
+                locationChange = navigation(location,'x','+');
+            }
+        }else{ // y as priority direction
+            if (destination.second < location.second) { //move up
+                locationChange = navigation(location,'y','-');
+            }else{//move down
+                locationChange = navigation(location,'y','+');
+            }
+        }
+
+        nextLocation.first = location.first + locationChange.first;
+        nextLocation.second = location.second + locationChange.second;
+
+        return nextLocation;
+    }
+
+    /*
+     * Check if the destination workstation is nearby
+     */
+    [[nodiscard]] bool WSNearby(std::pair<int, int> destination) const {
+        for(auto const neighbors: state.neighbors_state) {
+            if(neighbors.second.type == WORKSTATION) {
+                if (neighbors.first[0] == destination.first) {
+                    if (neighbors.first[1] == destination.second) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /*
+     * Check if the destination DOOR is nearby
+     */
+    [[nodiscard]] bool doorNearby(std::pair<int, int> destination) const{
+        for(auto const neighbors: state.neighbors_state) {
+            if(neighbors.second.type == DOOR) {
+                if (neighbors.first[0] == destination.first) {
+                    if (neighbors.first[1] == destination.second) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /*
+     * Using movement rules to do the navigation
+     *
+     * return: the location change
+     */
+    [[nodiscard]] std::pair<int,int> navigation(std::pair<int,int> location, char priority, char direction) const {
+        std::pair<int,int> locationChange;
+        locationChange.first = 0;
+        locationChange.second = 0;
+
+        int change;
+        if(direction == '-'){
+            change = -1;
+        } else{
+            change = 1;
+        }
+
+        if(priority == 'x'){
+            if(moveCheck(location.first + change, location.second)){
+                locationChange.first = change;
+            }else if(moveCheck(location.first, location.second + change)){
+                locationChange.second = change;
+            }else if(moveCheck(location.first, location.second - change)){
+                locationChange.second = 0 - change;
+            }else if(moveCheck(location.first - change, location.second)){
+                locationChange.first = change;
+            }
+        }else{
+            if(moveCheck(location.first, location.second + change)){
+                locationChange.second = change;
+            }else if(moveCheck(location.first + change, location.second)){
+                locationChange.first = change;
+            }else if(moveCheck(location.first - change, location.second)){
+                locationChange.first = 0 - change;
+            }else if(moveCheck(location.first, location.second - change)){
+                locationChange.second = change;
+            }
+        }
+        return locationChange;
+    }
+
+    /*
+     * Check if the next location is occupied
+     */
+    [[nodiscard]] bool moveCheck(int xNext,int yNext) const {
+        bool moveCheck = false;
+        for(auto const neighbors: state.neighbors_state) {
+            if(neighbors.first[0] == xNext){
+                if(neighbors.first[1] == yNext){
+                    if(neighbors.second.type == AIR) {
+                        moveCheck = true;
+                    }
+                }
+            }
+        }
+
+        for(auto const student: studentsList){
+            if(student.second.first == xNext){
+                if(student.second.second == yNext){
+                    moveCheck = false;
+                }
+            }
+        }
+
+        return moveCheck;
+    }
+
     // It returns the delay to communicate cell's new state.
     T output_delay(co2 const &cell_state) const override {
         switch(cell_state.type){

@@ -65,6 +65,7 @@ int main() {
         int cell_y;        
         co2 input;
         int type;
+        std::pair<int,std::pair<int,int>> workstationInfo;
 
         std::string delimiter = "=";
         size_t pos = line.find(delimiter);
@@ -101,6 +102,12 @@ int main() {
                 break;
             case -700:
                input.type = WORKSTATION;
+                workstationInfo.first = workstationNumber;
+                workstationInfo.second.first = cell_x;
+                workstationInfo.second.second = cell_y;
+
+                workstationsList.push_back(workstationInfo);
+                workstationNumber++;
                 break;
             case -100:
                 input.type = AIR;
@@ -125,7 +132,7 @@ int main() {
     std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> t = std::make_shared<grid_coupled<TIME, co2, int>>(CO2_model);
 
     cadmium::dynamic::engine::runner<TIME, logger_top> r(t, {0});
-    r.run_until(400);
+    r.run_until(150);
     cout << "Simulation finished" << endl;
     return 0;
 }
