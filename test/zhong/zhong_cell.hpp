@@ -1,5 +1,5 @@
 //
-// Created by Román Cárdenas Rodríguez on 26/05/2020.
+// Created by Kevin Henares on 10/06/2020.
 //
 
 #ifndef CADMIUM_CELLDEVS_PANDEMIC_CELL_HPP
@@ -70,15 +70,21 @@ inline bool operator < (const sir& lhs, const sir& rhs){ return true; }
 std::ostream &operator << (std::ostream &os, const sir &x) {
     os << "<" << x.population << "," << x.phase << "," << x.num_inf << "," << x.num_rec << "," << x.susceptible;
 
+    float inf_sum = 0;
     for(int i=0; i < x.num_inf; i++) {
         os << "," << x.infected[i];
+        inf_sum += x.infected[i];
     }
 
+    int rec_sum = 0;
     for(int i=0; i < x.num_rec; i++) {
         os << "," << x.recovered[i];
+        rec_sum += x.recovered[i];
     }
 
     os << "," << x.deaths;
+    os << "," << inf_sum;  // Combined values for the visualizer
+    os << "," << rec_sum;
     os << ">";
     return os;
 }
@@ -108,12 +114,12 @@ public:
     static const int INF_NUM = 16;
 
     float disobedient = 0.0;
-    int precDivider = 1000;
-    float virulencyRates[NUM_PHASES][INF_NUM] = {{0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15}};
-    float recoveryRates[NUM_PHASES][INF_NUM-1] = {{0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07}};
-    float mortalityRates[NUM_PHASES][INF_NUM] = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+    int precDivider = 10000;
+    float virulencyRates[NUM_PHASES][INF_NUM] = {{0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6}};
+    float recoveryRates[NUM_PHASES][INF_NUM-1] = {{0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01}};
+    float mortalityRates[NUM_PHASES][INF_NUM] = {{0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01}};
     float movilityRates[NUM_PHASES][INF_NUM] = {{0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6}};
-    //int phases_durations[6] = {30, 14, 14, 14, 14, 100};
+    int phases_durations[NUM_PHASES] = {1};
 
     zhong_cell() : grid_cell<T, sir, mc>() {}
 
@@ -141,24 +147,27 @@ public:
         std::cout << std::setprecision(10)<< res.recovered << "\n";*/
 
         float new_i = std::round(get_phase_penalty(res.phase) * new_infections() * precDivider) / precDivider;
-        float new_r = res.infected[res.num_inf-1];
-        //  - (res.infected[res.num_inf-1] * mortalityRates[res.num_inf-1]))
+        float deaths_last_inf = round(res.infected[res.num_inf-1] * mortalityRates[res.phase][res.num_inf-1] * precDivider) / precDivider;
+        float new_r = res.infected[res.num_inf-1] - deaths_last_inf;
+        //  ))
         float new_s = 1;
-        //float new_d = res.deaths;
+        float new_d = res.deaths;
+        new_d += deaths_last_inf;
 
         for (int i = 0; i < res.num_inf - 1; ++i) {
-            //new_r += std::round((res.infected[i] - (res.infected[i] * mortalityRates[i])) * recoveryRates[i] * precDivider) / precDivider;
-            new_r += std::round(res.infected[i] * recoveryRates[res.phase][i] * precDivider) / precDivider;
+            float curr_deaths = std::round(res.infected[i] * mortalityRates[res.phase][i] * precDivider) / precDivider;
+            new_r += std::round((res.infected[i] - curr_deaths) * recoveryRates[res.phase][i] * precDivider) / precDivider;
+            //new_r += std::round(res.infected[i] * recoveryRates[res.phase][i] * precDivider) / precDivider;
         }
 
         for (int i = res.num_inf - 1; i > 0; --i) {
             float curr_inf = res.infected[i-1];
-            //float curr_deaths = res.infected[i-1] * mortalityRates[i-1];
-            //curr_inf -= curr_deaths;
+            float curr_deaths = std::round(res.infected[i-1] * mortalityRates[res.phase][i-1] * precDivider) / precDivider;
+            curr_inf -= curr_deaths;
             curr_inf *= 1 - recoveryRates[res.phase][i-1];
             res.infected[i] = std::round(curr_inf * precDivider) / precDivider;
             new_s -= res.infected[i];
-            //new_d += curr_deaths;
+            new_d += curr_deaths;
         }
         res.infected[0] = new_i;
         new_s -= new_i;
@@ -169,20 +178,24 @@ public:
         }
         res.recovered[0] = new_r;
         new_s -= new_r;
+        new_d = std::round(new_d * precDivider) / precDivider;
+        new_s -= new_d;
         if(new_s > -0.001 && new_s < 0) new_s = 0;  // float precision issues
 
-        //res.deaths = std::round(new_d * precDivider) / precDivider;
-        //new_s -= res.deaths;
-        /*std::cout << std::setprecision(10) << new_s << "\n";
-        std::cout << std::setprecision(10) << res.infected << "\n";
-        std::cout << std::setprecision(10) << res.recovered << "\n";*/
-        assert(new_s >= 0);
-        res.susceptible = new_s;
-
         /*std::cout << clock << " - " << map.location << "\n"
-                << "New_inf: " << new_i << "\n"
-                << "New_rec: " << new_r << "\n"
-                << "Susceptible: " << res.susceptible << "\n";*/
+                  << "New_inf: " << new_i << "\n"
+                  << "New_rec: " << new_r << "\n"
+                  << "New_sus: " << new_s << "\n"
+                  << "New_deaths: " << new_d << "\n";
+        std::cout << std::setprecision(10) << res.susceptible << "\n";
+        std::cout << std::setprecision(10)<< res.infected << "\n";
+        std::cout << std::setprecision(10)<< res.recovered << "\n";
+        std::cout << std::setprecision(10)<< res.deaths << "\n";*/
+
+        assert(new_s >= 0);
+        res.susceptible = std::round(new_s * precDivider) / precDivider;
+        res.deaths = new_d;
+
         //assert(res.susceptible >= 0);
         res.phase = next_phase(res.phase);
 
@@ -263,7 +276,20 @@ public:
     }
 
     unsigned int next_phase(unsigned int phase) const {
-        return 0;
+        int days_sum = 0;
+        for(int phase_duration: phases_durations) {
+            days_sum += phase_duration;
+        }
+
+        int aux = (int)(clock) % (days_sum);
+        int i = 0;
+
+        while (aux >= phases_durations[i]) {
+            aux -= phases_durations[i];
+            i++;
+        }
+
+        return i;
     }
 };
 
